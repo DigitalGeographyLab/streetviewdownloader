@@ -4,9 +4,6 @@
 
 
 import configargparse
-import os
-import os.path
-import sys
 
 import shapely.wkt
 

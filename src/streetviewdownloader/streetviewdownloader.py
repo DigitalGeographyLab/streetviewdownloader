@@ -59,5 +59,5 @@ class StreetViewDownloader:
         )
 
         StreetViewImageDownloader(
-            self.api_key, self.url_signing_key
+            self.api_key, self.url_signing_key, output_directory
         ).download(streetview_metadata)
