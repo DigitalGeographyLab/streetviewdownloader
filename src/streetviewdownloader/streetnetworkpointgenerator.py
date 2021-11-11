@@ -152,6 +152,7 @@ class StreetNetworkPointGenerator:
 
     @property
     def temp_dir(self):
+        """Make a temporary directory that is later cleaned up by __del__."""
         try:
             return self._temp_dir
         except AttributeError:

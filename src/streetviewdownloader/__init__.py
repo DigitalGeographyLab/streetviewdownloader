@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""A Python library and utility to download Google StreetView imagery"""
+"""A Python library and utility to download Google StreetView imagery."""
 
 from .streetviewdownloader import StreetViewDownloader
 from .streetnetworkpointgenerator import StreetNetworkPointGenerator
