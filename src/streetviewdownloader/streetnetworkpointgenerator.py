@@ -35,14 +35,16 @@ class StreetNetworkPointGenerator:
         """
         self.extent = extent
         try:
-            del(self._streetnetwork)  # clean
+            del self._streetnetwork  # clean
         except AttributeError:
             pass
 
         street_network = self.street_network.to_crs(self.good_enough_crs)
 
         num_workers = multiprocessing.cpu_count() + 1
-        workers = multiprocessing.Pool(processes=num_workers)
+        workers = multiprocessing.get_context("spawn").Pool(processes=num_workers)
+        # why spawn? -> had random lock-ups with large `street_network`s
+        # cf. https://pythonspeed.com/articles/python-multiprocessing/
 
         points = pandas.concat(
             workers.starmap(
@@ -50,11 +52,16 @@ class StreetNetworkPointGenerator:
                 zip(
                     numpy.array_split(street_network, num_workers),
                     itertools.repeat(20)
-                )
+                ),
             )
         )
 
-        points = points.set_crs(self.good_enough_crs).to_crs("EPSG:4326").drop_duplicates()
+        points = (
+            points
+            .set_crs(self.good_enough_crs)
+            .to_crs("EPSG:4326")
+            .drop_duplicates()
+        )
         return points
 
     @property
@@ -63,9 +70,19 @@ class StreetNetworkPointGenerator:
         try:
             return self._street_network
         except AttributeError:
-            # 1. Get a clipped .osm.pbf extract
+            # 1. Get an .osm.pbf extract that covers self.extent
             raw_osmpbf = os.path.join(self.temp_dir, "raw_osmpbf.osm.pbf")
             pbfclipper.PbfClipper().clip(self.extent, raw_osmpbf)
+            # # the code below, plus clipping in pyrom.OSM(.., boundingbox=X),
+            # # could be faster, but pyrosm is only clipping to boundingboxes
+            # # (even though it accepts polygons as parameters)
+            # # see https://github.com/HTenkanen/pyrosm/blob/master/pyrosm/pyrosm.py:127ff
+            # with open(
+            #     raw_osmpbf, "wb"
+            # ) as f, pbfclipper.CachingRequestsSession() as session, session.get(
+            #     pbfclipper.ExtractFinder().url_of_extract_covers(self.extent)
+            # ) as response:
+            #     f.write(response.content)
 
             # 2. Extract the street network
             street_network = pyrosm.OSM(raw_osmpbf).get_network(network_type="all")
@@ -98,7 +115,7 @@ class StreetNetworkPointGenerator:
 
         cf. https://stackoverflow.com/a/35025274
         """
-        if linestring.geom_type == 'LineString':
+        if linestring.geom_type == "LineString":
             num_vert = int(round(linestring.length / distance))
             if num_vert == 0:
                 num_vert = 1
@@ -106,11 +123,8 @@ class StreetNetworkPointGenerator:
                 linestring.interpolate(float(n) / num_vert, normalized=True)
                 for n in range(num_vert + 1)
             ]
-        elif linestring.geom_type == 'MultiLineString':
-            parts = [
-                cls.redistributed_vertices(part, distance)
-                for part in linestring
-            ]
+        elif linestring.geom_type == "MultiLineString":
+            parts = [cls.redistributed_vertices(part, distance) for part in linestring]
             points = [point for part in parts for point in part]
         else:
             raise Warning("Skipped %s", (linestring.geom_type,))
@@ -128,7 +142,7 @@ class StreetNetworkPointGenerator:
         try:
             crsinfo = pyproj.database.query_utm_crs_info(
                 datum_name="WGS 84",
-                area_of_interest=pyproj.aoi.AreaOfInterest(*self.extent.bounds)
+                area_of_interest=pyproj.aoi.AreaOfInterest(*self.extent.bounds),
             )[0]
             crs = pyproj.CRS.from_authority(crsinfo.auth_name, crsinfo.code)
         except IndexError:
