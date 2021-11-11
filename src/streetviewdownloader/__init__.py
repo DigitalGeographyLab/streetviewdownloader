@@ -3,9 +3,16 @@
 """A Python library and utility to download Google StreetView imagery"""
 
 from .streetviewdownloader import StreetViewDownloader
+from .streetnetworkpointgenerator import StreetNetworkPointGenerator
+from .streetviewimagedownloader import StreetViewImageDownloader
+from .streetviewmetadatadownloader import StreetViewMetadataDownloader
+
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "StreetViewDownloader"
+    "StreetViewDownloader",
+    "StreetNetworkPointGenerator",
+    "StreetViewImageDownloader",
+    "StreetViewMetadataDownloader",
 ]
