@@ -42,7 +42,8 @@ class StreetViewMetadataDownloader:
         input_queue = queue.Queue()
         output_queue = queue.Queue()
 
-        num_workers = multiprocessing.cpu_count()
+        # since the bottleneck is network I/O, we can go a bit higher here
+        num_workers = max(10, multiprocessing.cpu_count() * 2)
 
         threads = []
         for _ in range(num_workers):
