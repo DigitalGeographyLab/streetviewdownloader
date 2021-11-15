@@ -23,23 +23,24 @@ class StreetNetworkPointGenerator:
 
     def points_on_street_network(self, extent, distance_between_points=20):
         """
-        Interpolated points along all streets within `extent` at `distance_between_points` distance.
+        Interpolate points along all streets within ``extent`` at ``distance_between_points``.
 
-        Arguments:
-            extent (shapely.geometry.Polygon): defines the extent
-            distance_between_points (int or float): the distance in meters between
-                interpolated points.
+        Arguments
+        ----------
+        extent : shapely.geometry.Polygon
+            For which area to calculate interpolated points
+        distance_between_points: int | float
+            The distance in meters between interpolated points
 
-        Returns:
-            GeoDataFrame (Point geometry, no other columns)
+        Returns
+        -------
+        GeoDataFrame
+            The interpolated points (Point geometry in column ``geometry``,
+            no other columns)
         """
         self.extent = extent
-        try:
-            del self._streetnetwork  # clean
-        except AttributeError:
-            pass
 
-        street_network = self.street_network.to_crs(self.good_enough_crs)
+        street_network = self.street_network.to_crs(self._good_enough_crs)
 
         num_workers = multiprocessing.cpu_count() + 1
         workers = multiprocessing.get_context("spawn").Pool(processes=num_workers)
@@ -48,17 +49,17 @@ class StreetNetworkPointGenerator:
 
         points = pandas.concat(
             workers.starmap(
-                self.interpolate_along_lines,
+                self._interpolate_along_lines,
                 zip(
                     numpy.array_split(street_network, num_workers),
-                    itertools.repeat(20)
+                    itertools.repeat(20)  # add 20 for every split array
                 ),
             )
         )
 
         points = (
             points
-            .set_crs(self.good_enough_crs)
+            .set_crs(self._good_enough_crs)
             .to_crs("EPSG:4326")
             .drop_duplicates()
         )
@@ -66,12 +67,12 @@ class StreetNetworkPointGenerator:
 
     @property
     def street_network(self):
-        """Generate a street network covering `self.extent`."""
+        """Street network covering ``self.extent`` (read-only)."""
         try:
             return self._street_network
         except AttributeError:
             # 1. Get an .osm.pbf extract that covers self.extent
-            raw_osmpbf = os.path.join(self.temp_dir, "raw_osmpbf.osm.pbf")
+            raw_osmpbf = os.path.join(self._temp_dir, "raw_osmpbf.osm.pbf")
             pbfclipper.PbfClipper().clip(self.extent, raw_osmpbf)
             # # the code below, plus clipping in pyrom.OSM(.., boundingbox=X),
             # # could be faster, but pyrosm is only clipping to boundingboxes
@@ -85,36 +86,54 @@ class StreetNetworkPointGenerator:
             #     f.write(response.content)
 
             # 2. Extract the street network
-            street_network = pyrosm.OSM(raw_osmpbf).get_network(network_type="all")
+            self._street_network = pyrosm.OSM(raw_osmpbf).get_network(network_type="all")
 
-            self._street_network = street_network
+        return self._street_network
 
-        return street_network
-
-    def interpolate_along_lines(self, geodataframe, distance):
+    def _interpolate_along_lines(self, geodataframe, distance):
         """
         Return points along a line at a regular distance.
 
-        Designed to be called by `geopandas.GeoDataFrame.apply()`.
+        Arguments
+        -----------
+        geodataframe : geopandas.GeoDataFrame
+            Interpolate points along these LineString geometries.
+        distance : int | float
+            Distance between interpolated points in meters.
+
+        Returns
+        -------
+        geopandas.GeoDataFrame:
+            All interpolated points.
         """
         point_geodataframe = geopandas.GeoDataFrame(
-            geodataframe.geometry.apply(self.redistributed_vertices, distance=distance)
+            geodataframe.geometry.apply(self._redistributed_vertices, distance=distance)
         )
-        point_geodataframe = point_geodataframe.explode("geometry")
+        point_geodataframe = point_geodataframe.explode("geometry").reset_index(drop=True)
         return point_geodataframe
 
     @classmethod
-    def redistributed_vertices(cls, linestring, distance):
+    def _redistributed_vertices(cls, linestring, distance):
         """
-        Redistribute the vertices of `linestring` at a regular distance.
+        Redistribute the vertices of ``linestring`` at a regular distance.
 
-        Arguments:
-            linestring (shapely.geometry.Linestring or shapely.geometry.MultiLinestring):
-                interpolate along this linestring
-            distance (int): distance between interpolated points
+        Arguments
+        ---------
+        linestring : shapely.geometry.Linestring
+            Interpolate along this linestring
+        distance : int
+            Distance between interpolated points
 
-        cf. https://stackoverflow.com/a/35025274
+        Returns
+        -------
+        list[shapely.geometry.Point]
+            All interpolated points.
+
+        Note
+        ----
+        Designed to be called by ``geopandas.GeoDataFrame.apply()``.
         """
+        # cf. https://stackoverflow.com/a/35025274
         if linestring.geom_type == "LineString":
             num_vert = int(round(linestring.length / distance))
             if num_vert == 0:
@@ -124,7 +143,7 @@ class StreetNetworkPointGenerator:
                 for n in range(num_vert + 1)
             ]
         elif linestring.geom_type == "MultiLineString":
-            parts = [cls.redistributed_vertices(part, distance) for part in linestring]
+            parts = [cls._redistributed_vertices(part, distance) for part in linestring]
             points = [point for part in parts for point in part]
         else:
             raise Warning("Skipped %s", (linestring.geom_type,))
@@ -132,12 +151,17 @@ class StreetNetworkPointGenerator:
         return points
 
     @property
-    def good_enough_crs(self):
+    def _good_enough_crs(self):
         """
         Find the most appropriate UTM reference system for the current extent.
 
         (We need this to be able to calculate lengths in meters.
         Results don’t have to be perfect, so also the neighbouring UTM grid will do.)
+
+        Returns
+        -------
+        pyproj.CRS
+            Best-fitting UTM reference system.
         """
         try:
             crsinfo = pyproj.database.query_utm_crs_info(
@@ -151,14 +175,14 @@ class StreetNetworkPointGenerator:
         return crs
 
     @property
-    def temp_dir(self):
+    def _temp_dir(self):
         """Make a temporary directory that is later cleaned up by __del__."""
         try:
-            return self._temp_dir
+            return self.__temp_dir
         except AttributeError:
-            self._temp_dir = tempfile.mkdtemp()
-            return self._temp_dir
+            self.__temp_dir = tempfile.mkdtemp()
+            return self.__temp_dir
 
     def __del__(self):
         """Clean up temporary directory once we’re done."""
-        shutil.rmtree(self.temp_dir, ignore_errors=True)
+        shutil.rmtree(self._temp_dir, ignore_errors=True)

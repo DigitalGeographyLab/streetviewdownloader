@@ -33,7 +33,7 @@ class StreetViewMetadataDownloaderThread(BaseStreetViewDownloaderThread):
                 metadata = self.input_queue.get(timeout=1)
             except queue.Empty:
                 continue
-            metadata = metadata.apply(self._query_source, axis=1)
+            metadata = metadata.apply(self._query_source, axis=1).reset_index(drop=True)
             self.output_queue.put(metadata)
             self.input_queue.task_done()
 
