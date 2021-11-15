@@ -24,3 +24,6 @@ docs/build/**
 src/**/*.so
 src/**/*.c
 src/**/*.o
+
+docs/_build/
+**/.ipynb_checkpoints
