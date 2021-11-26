@@ -8,10 +8,11 @@ import datetime
 import os
 import tempfile
 
+import geopandas
+
 from .cache import Cache, NotInCache
 from .cachingrequestssession import CachingRequestsSession
 from .extractfinder import ExtractFinder
-from .pbffileclipper import PbfFileClipper
 
 
 import warnings
@@ -56,7 +57,7 @@ class StreetNetworkDownloader:
                 clip data to this polygon
         """
         try:
-            clipped_network = self.cache.cached(str(polygon))
+            street_network = geopandas.read_file(self.cache.cached(str(polygon)))
 
         except NotInCache:
             extract_url = ExtractFinder().url_of_extract_that_covers(polygon)
@@ -69,8 +70,9 @@ class StreetNetworkDownloader:
             ) as response:
                 input_file.write(response.content)
 
-            PbfFileReader().clip(input_filename, polygon, output_filename)
+            street_network = PbfFileReader().clip(input_filename, polygon)
 
-            self.cache.write_to_cache(str(polygon), output.read())
+            # THIS DOES NOT WORK YET LIKE THIS!
+            #self.cache.write_to_cache(str(polygon), street_network)
 
             os.unlink(input_filename)

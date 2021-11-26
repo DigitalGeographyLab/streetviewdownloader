@@ -25,6 +25,10 @@ from pyrosm_proto import (
     Way
 )
 
+# suppress warnings, cause GEOS version mismatch
+import warnings
+warnings.simplefilter("ignore")
+
 
 class PbfFileReader:
     """Read the blocks of a PBF file."""
@@ -45,7 +49,7 @@ class PbfFileReader:
             clip data to the extent of ``clip_polygon``
         """
         self._file = open(file_path, "rb")
-        self._clip_polygon = clip_polygon
+        self._clip_polygon = pygeos.from_shapely(clip_polygon)
         self._lock = threading.Lock()
         self.header = self._read_header()
 
@@ -77,46 +81,53 @@ class PbfFileReader:
         payload.ParseFromString(self._file.read(header.datasize))
         return zlib.decompress(payload.zlib_data)
 
-    def _primitive_block(self) -> PrimitiveBlock:
-        primitive_block = PrimitiveBlock()
-        primitive_block.ParseFromString(self._read_next_block())
-        return primitive_block
-
     @property
-    def primitive_blocks(self) -> Iterator[PrimitiveBlock]:
+    def _blocks(self) -> Iterator[bytes]:
         while True:
             try:
-                with self._lock:  # make it thread-safe
-                    primitive_block = self._primitive_block()
-                yield primitive_block
+                block = self._read_next_block()
+                yield block
             except StopIteration:
+                self._file.close()
                 break
 
     @staticmethod
     def _parse_primitive_block(
-            primitive_block: PrimitiveBlock,
+            primitive_block: bytes,
             clip_polygon: pygeos.Geometry
     ) -> Tuple[Dict[int, Tuple[float, float]], list[list[int]]]:
-        # some things we’ll use repeatedly
-        clip_polygon = pygeos.prepare(clip_polygon)
-        index_of_highway_in_string_table = (
-            primitive_block.stringtable.s.index(
-                "highway".encode("UTF-8")
+        # reconstruct pickeled/unprepared input
+        _pblock = PrimitiveBlock()
+        _pblock.ParseFromString(primitive_block)
+        primitive_block = _pblock
+        pygeos.prepare(clip_polygon)
+
+        try:
+            index_of_highway_in_string_table = (
+                primitive_block.stringtable.s.index(
+                    "highway".encode("UTF-8")
+                )
             )
-        )
+        except ValueError:
+            index_of_highway_in_string_table = -1
 
         # we only care about nodes and ways, no need for relations, here
-        for primitive_group in primitive_block.primitive_group:
-            nodes = (
-                PbfFileReader._parse_dense_nodes(
-                    primitive_group.dense,
-                    clip_polygon,
-                    primitive_block.granularity,
-                    primitive_block.lon_offset,
-                    primitive_block.lat_offset
-                )
-                | PbfFileReader._parse_nodes(primitive_group.nodes, clip_polygon)
-            )
+        for primitive_group in primitive_block.primitivegroup:
+            nodes = {}
+            nodes.update(PbfFileReader._parse_dense_nodes(
+                primitive_group.dense,
+                clip_polygon,
+                primitive_block.granularity,
+                primitive_block.lon_offset,
+                primitive_block.lat_offset
+            ))
+            nodes.update(PbfFileReader._parse_nodes(
+                primitive_group.nodes,
+                clip_polygon,
+                primitive_block.granularity,
+                primitive_block.lon_offset,
+                primitive_block.lat_offset
+            ))
             ways = PbfFileReader._parse_ways(
                 primitive_group.ways,
                 clip_polygon,
@@ -144,7 +155,7 @@ class PbfFileReader:
         nodes["lon"] = ((nodes["lon"].cumsum() * granularity) + lon_offset) / (10.0 ** 9)
         nodes["lat"] = ((nodes["lat"].cumsum() * granularity) + lat_offset) / (10.0 ** 9)
 
-        nodes = PbfFileReader._clip_nodes_to_polygons(nodes)
+        nodes = PbfFileReader._clip_nodes_to_polygons(nodes, clip_polygon)
         nodes = {
             node.id: (node.lon, node.lat)
             for node in nodes.itertuples()
@@ -167,8 +178,7 @@ class PbfFileReader:
                 "lat": [node.lat for node in nodes]
             }
         )
-
-        nodes = PbfFileReader._clip_nodes_to_polygons(nodes)
+        nodes = PbfFileReader._clip_nodes_to_polygons(nodes, clip_polygon)
         nodes = {
             node.id: (node.lon, node.lat)
             for node in nodes.itertuples()
@@ -181,6 +191,8 @@ class PbfFileReader:
             clip_polygon: pygeos.Geometry,
             index_of_highway_in_string_table: int
     ) -> list[list[int]]:
+        if index_of_highway_in_string_table == -1:
+            return []
         ways = [
             [node_id for node_id in itertools.accumulate(way.refs)]
             for way in ways
@@ -210,19 +222,22 @@ class PbfFileReader:
         # 2. discard (now) empty ways
         #    TODO: we now kicked out ways that go from inside
         #    clip_polygon to outside of it -> change that!
-        ways = [way for way in ways if len(way) < 2]
+        ways = [way for way in ways if len(way) > 2]
 
         # 3. lookup coordinates
         ways = [
             [
-                (nodes[node]["lon"], nodes[node]["lat"])
+                (nodes[node][0], nodes[node][1])  # lon, lat
                 for node in way
             ]
             for way in ways
         ]
 
-        # 4. create geometries
-        ways = pygeos.linestrings(ways)
+        # 4. create geometries (if any ways)
+        ways = [
+            pygeos.linestrings(way)
+            for way in ways
+        ]
 
         return ways
 
@@ -238,14 +253,24 @@ class PbfFileReader:
             # cf. https://pythonspeed.com/articles/python-multiprocessing/
 
             parsed_data = workers.starmap(
-                self._parse_primitive_block,
+                PbfFileReader._parse_primitive_block,
                 zip(
-                    self.primitive_blocks,
+                    self._blocks,
                     itertools.repeat(self._clip_polygon)
                 )
             )
 
-            nodes, ways = zip(*parsed_data)
+            list_of_dicts_of_nodes, list_of_lists_of_ways = zip(*parsed_data)
+            nodes = {
+                node_id: node_coords
+                for dict_of_nodes in list_of_dicts_of_nodes if dict_of_nodes
+                for node_id, node_coords in dict_of_nodes.items()
+            }
+            ways = [
+                way
+                for list_of_ways in list_of_lists_of_ways if list_of_ways
+                for way in list_of_ways
+            ]
 
             ways = sum(
                 workers.starmap(
