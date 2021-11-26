@@ -13,7 +13,6 @@ import tempfile
 import geopandas
 import numpy
 import pandas
-import pbfclipper
 import pyproj
 import pyrosm
 
