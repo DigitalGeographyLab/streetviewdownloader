@@ -6,15 +6,13 @@
 
 import itertools
 import multiprocessing
-import os.path
-import shutil
-import tempfile
 
 import geopandas
 import numpy
 import pandas
 import pyproj
-import pyrosm
+
+from .streetnetworkdownloader import StreetNetworkDownloader
 
 
 class StreetNetworkPointGenerator:
@@ -70,24 +68,8 @@ class StreetNetworkPointGenerator:
         try:
             return self._street_network
         except AttributeError:
-            # 1. Get an .osm.pbf extract that covers self.extent
-            raw_osmpbf = os.path.join(self._temp_dir, "raw_osmpbf.osm.pbf")
-            pbfclipper.PbfClipper().clip(self.extent, raw_osmpbf)
-            # # the code below, plus clipping in pyrom.OSM(.., boundingbox=X),
-            # # could be faster, but pyrosm is only clipping to boundingboxes
-            # # (even though it accepts polygons as parameters)
-            # # see https://github.com/HTenkanen/pyrosm/blob/master/pyrosm/pyrosm.py:127ff
-            # with open(
-            #     raw_osmpbf, "wb"
-            # ) as f, pbfclipper.CachingRequestsSession() as session, session.get(
-            #     pbfclipper.ExtractFinder().url_of_extract_covers(self.extent)
-            # ) as response:
-            #     f.write(response.content)
-
-            # 2. Extract the street network
-            self._street_network = pyrosm.OSM(raw_osmpbf).get_network(network_type="all")
-
-        return self._street_network
+            self._street_network = StreetNetworkDownloader().street_network(self.extent)
+            return self._street_network
 
     def _interpolate_along_lines(self, geodataframe, distance):
         """
@@ -172,16 +154,3 @@ class StreetNetworkPointGenerator:
             # no UTM grid found for the location?! are we on the moon?
             crs = pyproj.CRS.from_epsg(3857)  # well, web mercator will have to do
         return crs
-
-    @property
-    def _temp_dir(self):
-        """Make a temporary directory that is later cleaned up by __del__."""
-        try:
-            return self.__temp_dir
-        except AttributeError:
-            self.__temp_dir = tempfile.mkdtemp()
-            return self.__temp_dir
-
-    def __del__(self):
-        """Clean up temporary directory once we’re done."""
-        shutil.rmtree(self._temp_dir, ignore_errors=True)

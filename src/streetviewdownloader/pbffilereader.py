@@ -5,6 +5,7 @@
 
 import itertools
 import multiprocessing
+import os
 import struct
 import threading
 import zlib
@@ -28,6 +29,7 @@ from pyrosm_proto import (
 # suppress warnings, cause GEOS version mismatch
 import warnings
 warnings.simplefilter("ignore")
+os.environ["PYTHONWARNINGS"] = "ignore"
 
 
 class PbfFileReader:
@@ -54,13 +56,8 @@ class PbfFileReader:
         self.header = self._read_header()
 
     def __del__(self) -> None:
+        """Take care of possibly open file before we exit."""
         self._file.close()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self) -> None:
-        return None
 
     def _read_header(self) -> HeaderBlock:
         self._file.seek(0)
@@ -243,7 +240,7 @@ class PbfFileReader:
 
     @property
     def street_network(self) -> geopandas.GeoDataFrame:
-        """The LineStrings forming the street network."""
+        """Return LineStrings forming the street network."""
         try:
             return self._street_network
         except AttributeError:

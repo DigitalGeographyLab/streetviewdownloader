@@ -32,7 +32,7 @@ class Cache:
             clean_cache=True
     ):
         """
-        Simple, universal file-based cache.
+        A simple, universal file-based cache.
 
         Arguments
         ---------

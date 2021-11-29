@@ -5,6 +5,7 @@
 
 
 import datetime
+import io
 import os
 import tempfile
 
@@ -13,6 +14,7 @@ import geopandas
 from .cache import Cache, NotInCache
 from .cachingrequestssession import CachingRequestsSession
 from .extractfinder import ExtractFinder
+from .pbffilereader import PbfFileReader
 
 
 import warnings
@@ -70,9 +72,13 @@ class StreetNetworkDownloader:
             ) as response:
                 input_file.write(response.content)
 
-            street_network = PbfFileReader().clip(input_filename, polygon)
+            street_network = PbfFileReader(input_file, polygon).street_network
 
-            # THIS DOES NOT WORK YET LIKE THIS!
-            #self.cache.write_to_cache(str(polygon), street_network)
+            gpkg = io.BytesIO()
+            street_network.to_file(gpkg, driver="GPKG")
+            self.cache.write_to_cache(str(polygon), gpkg)
 
             os.unlink(input_filename)
+            del gpkg
+
+        return street_network
