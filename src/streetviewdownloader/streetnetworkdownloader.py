@@ -72,11 +72,11 @@ class StreetNetworkDownloader:
             ) as response:
                 input_file.write(response.content)
 
-            street_network = PbfFileReader(input_file, polygon).street_network
+            street_network = PbfFileReader(input_filename, polygon).street_network
 
             gpkg = io.BytesIO()
             street_network.to_file(gpkg, driver="GPKG")
-            self.cache.write_to_cache(str(polygon), gpkg)
+            self.cache.write_to_cache(str(polygon), gpkg.read())
 
             os.unlink(input_filename)
             del gpkg

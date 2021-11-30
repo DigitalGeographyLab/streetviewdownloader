@@ -36,13 +36,17 @@ def main():
         default="./",
         help="Save downloaded images and metadata to this directory"
     )
+    argparser.add_argument(
+        "--metadata-only",
+        action="store_true"
+    )
     args = argparser.parse_args()
 
     extent = shapely.wkt.loads(args.extent)
 
     StreetViewDownloader(
         args.api_key, args.url_signing_key
-    ).download(extent, args.output_directory)
+    ).download(extent, args.output_directory, args.metadata_only)
 
 
 if __name__ == "__main__":

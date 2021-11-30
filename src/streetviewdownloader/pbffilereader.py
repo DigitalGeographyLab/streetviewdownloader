@@ -280,5 +280,8 @@ class PbfFileReader:
                 []
             )
 
-            self._street_network = ways
+            self._street_network = geopandas.GeoDataFrame(
+                {"geometry": ways},
+                crs="EPSG:4326"
+            )
             return self._street_network
