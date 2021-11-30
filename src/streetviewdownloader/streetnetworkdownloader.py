@@ -59,7 +59,9 @@ class StreetNetworkDownloader:
                 clip data to this polygon
         """
         try:
-            street_network = geopandas.read_file(self.cache.cached(str(polygon)))
+            street_network = geopandas.read_file(
+                io.BytesIO(self.cache.cached(str(polygon)))
+            )
 
         except NotInCache:
             extract_url = ExtractFinder().url_of_extract_that_covers(polygon)
