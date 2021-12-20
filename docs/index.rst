@@ -3,11 +3,8 @@ Streetviewdownloader
 
 **Streetviewdownloader** is a Python library and utility to download images from Google’s StreetView Static API.
 
-Getting started
----------------
-
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents
 
    installation
