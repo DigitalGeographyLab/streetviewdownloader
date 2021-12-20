@@ -1,3 +1,4 @@
+geopandas==0.10.2
 ipycache==0.1.4
 ipykernel==6.6.0
 ipyleaflet==0.15.0
