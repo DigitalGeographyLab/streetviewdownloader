@@ -6,6 +6,7 @@ ipython-genutils==0.2.0
 ipywidgets==7.6.5
 nbsphinx==0.8.7
 PyYAML==5.4.1
+Shapely==1.7.1
 Sphinx==4.3.1
 sphinx-rtd-theme==1.0.0
 sphinxcontrib-applehelp==1.0.2
