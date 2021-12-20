@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-"""Handle multiple `StreetViewMetadataDownloaderThread`s."""
+"""Download metadata from the StreetView Static API."""
 
 
 import multiprocessing
@@ -14,7 +14,7 @@ from .streetviewmetadatadownloaderthread import StreetViewMetadataDownloaderThre
 
 
 class StreetViewMetadataDownloader:
-    """Handle multiple `StreetViewMetadataDownloaderThread`s."""
+    """Download metadata from the StreetView Static API."""
 
     def __init__(
             self,
@@ -22,11 +22,14 @@ class StreetViewMetadataDownloader:
             url_signing_key
     ):
         """
-        Initialise a StreetViewMetadataDownloader.
+        Download metadata from the StreetView Static API.
 
-        Arguments:
-            api_key (str): Google StreetView Static API api key
-            url_signing_key (str): Google StreetView Static API url signing key
+        Arguments
+        ---------
+        api_key : str
+            StreetView Static API api key
+        url_signing_key str:
+            StreetView Static API url signing key
         """
         self.api_key = api_key
         self.url_signing_key = url_signing_key
@@ -35,14 +38,21 @@ class StreetViewMetadataDownloader:
         """
         Download metadata for the closest StreetView panorama to each point.
 
-        Arguments:
-            points (geopandas.GeoDataFrame): search for the closest
-                StreetView panorama to each point
+        Arguments
+        ---------
+        points : geopandas.GeoDataFrame
+            Search for the closest StreetView panorama to each point
+
+        Returns
+        -------
+        geopandas.GeoDataFrame
+            Date, ``pano_id`` and location (Point geometry) of the StreetView panoramas found
         """
         input_queue = queue.Queue()
         output_queue = queue.Queue()
 
-        num_workers = multiprocessing.cpu_count()
+        # since the bottleneck is network I/O, we can go a bit higher here
+        num_workers = max(10, multiprocessing.cpu_count() * 2)
 
         threads = []
         for _ in range(num_workers):

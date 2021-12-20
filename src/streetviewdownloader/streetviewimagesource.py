@@ -18,9 +18,7 @@ class StreetViewImageSource(BaseStreetViewSource):
     FIELD_OF_VIEW = 60  # degrees
 
     def get_images(self, pano_id):
-        """
-        Retrieve a set of StreetView images by pano_id at Point(lat, lon).
-        """
+        """Retrieve a set of StreetView images by pano_id at Point(lat, lon)."""
         images = {}
         for heading in range(0, 360, self.FIELD_OF_VIEW):
             try:

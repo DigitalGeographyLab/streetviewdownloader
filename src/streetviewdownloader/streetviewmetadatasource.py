@@ -24,7 +24,6 @@ class StreetViewMetadataSource(BaseStreetViewSource):
         Raises NoPanoramaFoundException if not panorama available
         within 50 meters search radius.
         """
-
         location = "{lat:0.6f},{lon:0.6f}".format(lat=lat, lon=lon)
 
         try:
