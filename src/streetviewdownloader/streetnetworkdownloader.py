@@ -78,9 +78,10 @@ class StreetNetworkDownloader:
 
             gpkg = io.BytesIO()
             street_network.to_file(gpkg, driver="GPKG")
+            gpkg.seek(0)
             self.cache.write_to_cache(str(polygon), gpkg.read())
+            del gpkg
 
             os.unlink(input_filename)
-            del gpkg
 
         return street_network
