@@ -48,8 +48,8 @@ class StreetViewImageDownloaderThread(BaseStreetViewDownloaderThread):
             pano_id
         )
         if not os.path.exists(output_directory):
-            images = self.source.get_images(pano_id)
             os.makedirs(output_directory)
+            images = self.source.get_images(pano_id)
             for heading, image in images.items():
                 filename = os.path.join(
                     output_directory,

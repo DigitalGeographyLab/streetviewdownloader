@@ -73,6 +73,7 @@ class StreetViewDownloader:
         if os.path.exists(metadata_filename):
             existing_data = geopandas.read_file(metadata_filename)
             streetview_metadata = existing_data.append(streetview_metadata)
+            streetview_metadata = streetview_metadata.drop_duplicates(["pano_id"])
         streetview_metadata.to_file(
             os.path.join(output_directory, "metadata.gpkg")
         )
