@@ -81,6 +81,7 @@ class StreetViewMetadataDownloader:
                 break
         streetview_metadata = pandas.concat(streetview_metadata)
         streetview_metadata = streetview_metadata[["date", "geometry", "pano_id"]]
+        streetview_metadata = streetview_metadata.set_crs("EPSG:4326")
         streetview_metadata = streetview_metadata.dropna()
         streetview_metadata = streetview_metadata.drop_duplicates(["pano_id"])
         return streetview_metadata

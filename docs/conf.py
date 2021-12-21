@@ -58,5 +58,8 @@ html_static_path = ['_static']
 # include __init__() in API doc
 autoclass_content = 'init'
 
+# do not re-run the jupyter notebooks (needs api credentials)
+nbsphinx_execute = 'never'
+
 import sys
 sys.path.append("../src/")

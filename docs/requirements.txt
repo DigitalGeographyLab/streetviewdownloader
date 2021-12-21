@@ -1,0 +1,15 @@
+ipycache
+ipykernel
+ipyleaflet
+ipython
+ipython-genutils
+ipywidgets
+nbsphinx
+Sphinx
+sphinx-rtd-theme
+sphinxcontrib-applehelp
+sphinxcontrib-devhelp
+sphinxcontrib-htmlhelp
+sphinxcontrib-jsmath
+sphinxcontrib-qthelp
+sphinxcontrib-serializinghtml
