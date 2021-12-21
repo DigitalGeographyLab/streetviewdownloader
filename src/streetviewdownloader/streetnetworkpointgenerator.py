@@ -88,7 +88,7 @@ class StreetNetworkPointGenerator:
             All interpolated points.
         """
         point_geodataframe = geopandas.GeoDataFrame(
-            geodataframe.geometry.apply(self._redistributed_vertices, distance=distance),
+            geodataframe.geometry.apply(self._redistributed_vertices, distance=distance)
         )
         point_geodataframe = point_geodataframe.explode("geometry").reset_index(drop=True)
         return point_geodataframe
