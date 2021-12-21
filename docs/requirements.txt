@@ -1,3 +1,5 @@
+ConfigArgParse
+geopandas
 ipycache
 ipykernel
 ipyleaflet
@@ -5,6 +7,14 @@ ipython
 ipython-genutils
 ipywidgets
 nbsphinx
+numpy
+pygeos
+pyproj
+pyrosm
+pyxdg
+PyYAML
+requests
+Shapely
 Sphinx
 sphinx-rtd-theme
 sphinxcontrib-applehelp
