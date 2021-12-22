@@ -1,3 +1,6 @@
+- **0.2.2** (2021-12-22):
+    - fixed autodoc error
+
 - **0.2.1** (2021-12-21):
     - documentation now on readthedocs
     - minor bug fixes
