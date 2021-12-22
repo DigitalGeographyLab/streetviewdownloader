@@ -13,3 +13,12 @@ sphinxcontrib-htmlhelp
 sphinxcontrib-jsmath
 sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
+
+ConfigArgParse
+numpy
+pygeos
+pyproj
+pyrosm
+pyxdg
+requests
+shapely
