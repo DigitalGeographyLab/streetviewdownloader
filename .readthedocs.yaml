@@ -5,7 +5,9 @@ build:
     tools:
         python: "3.10"
     apt_packages:
+        - gdal
         - python3-fiona
+        - python3-gdal
         - python3-pyproj
 
 python:
