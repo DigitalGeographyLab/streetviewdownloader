@@ -1,3 +1,6 @@
+- **0.2.3** (2022-05-11):
+    - require Python>=3.9 (type hints)
+
 - **0.2.2** (2021-12-22):
     - fixed autodoc error
 
