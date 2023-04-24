@@ -1,3 +1,8 @@
+- **0.2.4** (2023-04-24):
+    - remove hard-coded `distance_between_points`  (issue #4)
+    - prevent failing if not all headings exist for a panorama (issue #5)
+    - convert build script to pyproject.toml (issue #8)
+
 - **0.2.3** (2022-05-11):
     - require Python>=3.9 (type hints)
 
