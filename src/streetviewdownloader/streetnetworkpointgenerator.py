@@ -49,7 +49,7 @@ class StreetNetworkPointGenerator:
                 self._interpolate_along_lines,
                 zip(
                     numpy.array_split(street_network, num_workers),
-                    itertools.repeat(20)  # add 20 for every split array
+                    itertools.repeat(distance_between_points),  # repeat for every split array
                 ),
             )
         )
