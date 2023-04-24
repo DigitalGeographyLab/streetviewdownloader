@@ -51,12 +51,13 @@ class StreetViewImageDownloaderThread(BaseStreetViewDownloaderThread):
             os.makedirs(output_directory)
             images = self.source.get_images(pano_id)
             for heading, image in images.items():
-                filename = os.path.join(
-                    output_directory,
-                    "{pano_id:s}_{heading:03d}.jpg".format(
-                        pano_id=pano_id,
-                        heading=heading
+                if image is not None:
+                    filename = os.path.join(
+                        output_directory,
+                        "{pano_id:s}_{heading:03d}.jpg".format(
+                            pano_id=pano_id,
+                            heading=heading
+                        )
                     )
-                )
-                with open(filename, "wb") as image_file:
-                    image_file.write(image)
+                    with open(filename, "wb") as image_file:
+                        image_file.write(image)
