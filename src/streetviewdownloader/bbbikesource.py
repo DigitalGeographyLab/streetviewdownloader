@@ -14,7 +14,9 @@ from .basepbfsource import BasePbfSource
 class BbbikeSource(BasePbfSource):
     """Retrieve metadata on the extracts available from BBBike."""
 
-    METADATA_URL = "https://raw.githubusercontent.com/wosch/bbbike-world/world/etc/cities.csv"
+    METADATA_URL = (
+        "https://raw.githubusercontent.com/" "wosch/bbbike-world/world/etc/cities.csv"
+    )
 
     PBF_BASE_URL = "https://download.bbbike.org/osm/bbbike/{city:s}/{city:s}.osm.pbf"
 
@@ -29,8 +31,7 @@ class BbbikeSource(BasePbfSource):
             # first, mangle out the column names
             column_names = [
                 column_name.strip()
-                for column_name
-                in metadata_raw.readline()[1:].split(":")
+                for column_name in metadata_raw.readline()[1:].split(":")
             ]
             metadata_raw.seek(0)
 
@@ -39,11 +40,10 @@ class BbbikeSource(BasePbfSource):
                 metadata_raw,
                 delimiter=":",
                 comment="#",
-                names=column_names
+                names=column_names,
             ).dropna(how="all")
             metadata = metadata[
-                (metadata["City"] != "dummy")
-                & (metadata["step?"] != "dummy")
+                (metadata["City"] != "dummy") & (metadata["step?"] != "dummy")
             ]
 
             # reconstruct urls and coverage polygons

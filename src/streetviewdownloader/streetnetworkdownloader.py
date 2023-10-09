@@ -18,6 +18,7 @@ from .pbffilereader import PbfFileReader
 
 
 import warnings
+
 # warnings.filterwarnings(
 #     "ignore",
 #     message="Geometry is in a geographic CRS. Results from 'area' are likely incorrect. Use 'GeoSeries.to_crs()' to re-project geometries to a projected CRS before this operation."
@@ -29,9 +30,9 @@ class StreetNetworkDownloader:
     """Download and clip the street network for a requested extent."""
 
     def __init__(
-            self,
-            expire_after=datetime.timedelta(days=7),
-            clean_cache=True
+        self,
+        expire_after=datetime.timedelta(days=7),
+        clean_cache=True,
     ):
         """
         Download and clip the street network for a requested extent.

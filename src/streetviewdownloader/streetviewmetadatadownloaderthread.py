@@ -47,14 +47,13 @@ class StreetViewMetadataDownloaderThread(BaseStreetViewDownloaderThread):
             year, month, *_ = raw_metadata["date"].split("-")
             date = datetime.date(year=int(year), month=int(month), day=1)
             geometry = shapely.geometry.Point(
-                raw_metadata["location"]["lng"],
-                raw_metadata["location"]["lat"]
+                raw_metadata["location"]["lng"], raw_metadata["location"]["lat"]
             )
 
             metadata = {
                 "pano_id": raw_metadata["pano_id"],
                 "date": date,
-                "geometry": geometry
+                "geometry": geometry,
             }
             return pandas.Series(metadata)
 

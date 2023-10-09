@@ -8,10 +8,10 @@ import itertools
 import multiprocessing
 
 import geopandas
-import numpy
 import pandas
 import pyproj
 
+from .split_list import split_list
 from .streetnetworkdownloader import StreetNetworkDownloader
 
 
@@ -48,17 +48,14 @@ class StreetNetworkPointGenerator:
             workers.starmap(
                 self._interpolate_along_lines,
                 zip(
-                    numpy.array_split(street_network, num_workers),
-                    itertools.repeat(distance_between_points),  # repeat for every split array
+                    split_list(street_network, num_workers),
+                    itertools.repeat(distance_between_points),  # for every split array
                 ),
             )
         )
 
         points = (
-            points
-            .set_crs(self._good_enough_crs)
-            .to_crs("EPSG:4326")
-            .drop_duplicates()
+            points.set_crs(self._good_enough_crs).to_crs("EPSG:4326").drop_duplicates()
         )
         return points
 
@@ -88,9 +85,15 @@ class StreetNetworkPointGenerator:
             All interpolated points.
         """
         point_geodataframe = geopandas.GeoDataFrame(
-            geodataframe.geometry.apply(self._redistributed_vertices, distance=distance)
+            {
+                "geometry": geodataframe.geometry.apply(
+                    self._redistributed_vertices, distance=distance
+                )
+            }
         )
-        point_geodataframe = point_geodataframe.explode("geometry").reset_index(drop=True)
+        point_geodataframe = geopandas.GeoDataFrame(
+            point_geodataframe.explode("geometry").reset_index(drop=True)
+        )
         return point_geodataframe
 
     @classmethod

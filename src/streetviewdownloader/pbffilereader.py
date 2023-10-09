@@ -12,9 +12,9 @@ import zlib
 from typing import Dict, Iterator, Tuple, Union
 
 import geopandas
-import numpy
 import pandas
 import pygeos
+import shapely
 import shapely.geometry
 from pyrosm_proto import (
     BlobHeader,
@@ -23,11 +23,14 @@ from pyrosm_proto import (
     HeaderBlock,
     Node,
     PrimitiveBlock,
-    Way
+    Way,
 )
+
+from .split_list import split_list
 
 # suppress warnings, cause GEOS version mismatch
 import warnings
+
 warnings.simplefilter("ignore")
 os.environ["PYTHONWARNINGS"] = "ignore"
 
@@ -36,9 +39,9 @@ class PbfFileReader:
     """Read the blocks of a PBF file."""
 
     def __init__(
-            self,
-            file_path: str,
-            clip_polygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon]
+        self,
+        file_path: str,
+        clip_polygon: Union[shapely.geometry.Polygon, shapely.geometry.MultiPolygon],
     ) -> None:
         """
         Read an .osm.pbf file and return all streets.
@@ -90,8 +93,8 @@ class PbfFileReader:
 
     @staticmethod
     def _parse_primitive_block(
-            primitive_block: bytes,
-            clip_polygon: pygeos.Geometry
+        primitive_block: bytes,
+        clip_polygon: pygeos.Geometry,
     ) -> Tuple[Dict[int, Tuple[float, float]], list[list[int]]]:
         # reconstruct pickeled/unprepared input
         _pblock = PrimitiveBlock()
@@ -100,10 +103,8 @@ class PbfFileReader:
         pygeos.prepare(clip_polygon)
 
         try:
-            index_of_highway_in_string_table = (
-                primitive_block.stringtable.s.index(
-                    "highway".encode("UTF-8")
-                )
+            index_of_highway_in_string_table = primitive_block.stringtable.s.index(
+                "highway".encode("UTF-8")
             )
         except ValueError:
             index_of_highway_in_string_table = -1
@@ -111,82 +112,82 @@ class PbfFileReader:
         # we only care about nodes and ways, no need for relations, here
         for primitive_group in primitive_block.primitivegroup:
             nodes = {}
-            nodes.update(PbfFileReader._parse_dense_nodes(
-                primitive_group.dense,
-                clip_polygon,
-                primitive_block.granularity,
-                primitive_block.lon_offset,
-                primitive_block.lat_offset
-            ))
-            nodes.update(PbfFileReader._parse_nodes(
-                primitive_group.nodes,
-                clip_polygon,
-                primitive_block.granularity,
-                primitive_block.lon_offset,
-                primitive_block.lat_offset
-            ))
+            nodes.update(
+                PbfFileReader._parse_dense_nodes(
+                    primitive_group.dense,
+                    clip_polygon,
+                    primitive_block.granularity,
+                    primitive_block.lon_offset,
+                    primitive_block.lat_offset,
+                )
+            )
+            nodes.update(
+                PbfFileReader._parse_nodes(
+                    primitive_group.nodes,
+                    clip_polygon,
+                    primitive_block.granularity,
+                    primitive_block.lon_offset,
+                    primitive_block.lat_offset,
+                )
+            )
             ways = PbfFileReader._parse_ways(
-                primitive_group.ways,
-                clip_polygon,
-                index_of_highway_in_string_table
+                primitive_group.ways, clip_polygon, index_of_highway_in_string_table
             )
         return nodes, ways
 
     @staticmethod
     def _parse_dense_nodes(
-            dense_nodes: DenseNodes,
-            clip_polygon: pygeos.Geometry,
-            granularity: int,
-            lon_offset: float,
-            lat_offset: float
+        dense_nodes: DenseNodes,
+        clip_polygon: pygeos.Geometry,
+        granularity: int,
+        lon_offset: float,
+        lat_offset: float,
     ) -> Dict[int, Tuple[float, float]]:
         nodes = pandas.DataFrame(
             {
                 "id": dense_nodes.id,
                 "lon": dense_nodes.lon,
-                "lat": dense_nodes.lat
+                "lat": dense_nodes.lat,
             }
         )
         # delta_decode
         nodes["id"] = nodes["id"].cumsum()
-        nodes["lon"] = ((nodes["lon"].cumsum() * granularity) + lon_offset) / (10.0 ** 9)
-        nodes["lat"] = ((nodes["lat"].cumsum() * granularity) + lat_offset) / (10.0 ** 9)
+        nodes["lon"] = ((nodes["lon"].cumsum() * granularity) + lon_offset) / (
+            10.0**9
+        )
+        nodes["lat"] = ((nodes["lat"].cumsum() * granularity) + lat_offset) / (
+            10.0**9
+        )
 
         nodes = PbfFileReader._clip_nodes_to_polygons(nodes, clip_polygon)
-        nodes = {
-            node.id: (node.lon, node.lat)
-            for node in nodes.itertuples()
-        }
+        nodes = {node.id: (node.lon, node.lat) for node in nodes.itertuples()}
         return nodes
 
     @staticmethod
     def _parse_nodes(
-            nodes: list[Node],
-            clip_polygon: pygeos.Geometry,
-            granularity: int,
-            lon_offset: float,
-            lat_offset: float,
+        nodes: list[Node],
+        clip_polygon: pygeos.Geometry,
+        granularity: int,
+        lon_offset: float,
+        lat_offset: float,
     ) -> Dict[int, Tuple[float, float]]:
         # a bit inefficient, I guess, but let’s not prematurely optimise here
         nodes = pandas.DataFrame(
             {
                 "id": [node.id for node in nodes],
                 "lon": [node.lon for node in nodes],
-                "lat": [node.lat for node in nodes]
+                "lat": [node.lat for node in nodes],
             }
         )
         nodes = PbfFileReader._clip_nodes_to_polygons(nodes, clip_polygon)
-        nodes = {
-            node.id: (node.lon, node.lat)
-            for node in nodes.itertuples()
-        }
+        nodes = {node.id: (node.lon, node.lat) for node in nodes.itertuples()}
         return nodes
 
     @staticmethod
     def _parse_ways(
-            ways: list[Way],
-            clip_polygon: pygeos.Geometry,
-            index_of_highway_in_string_table: int
+        ways: list[Way],
+        clip_polygon: pygeos.Geometry,
+        index_of_highway_in_string_table: int,
     ) -> list[list[int]]:
         if index_of_highway_in_string_table == -1:
             return []
@@ -199,22 +200,18 @@ class PbfFileReader:
 
     @staticmethod
     def _clip_nodes_to_polygons(
-            nodes: pandas.DataFrame,
-            clip_polygon: pygeos.Geometry
+        nodes: pandas.DataFrame, clip_polygon: pygeos.Geometry
     ) -> bool:
         points = pygeos.points(nodes["lon"], nodes["lat"])
         return nodes[pygeos.contains(clip_polygon, points)]
 
     @staticmethod
     def _geometries_for_ways(
-            ways: list[list[int]],
-            nodes: dict[int, Tuple[float, float]]
-    ) -> list[pygeos.Geometry]:
+        ways: list[list[int]],
+        nodes: dict[int, Tuple[float, float]],
+    ) -> list[shapely.LineString]:
         # 1. remove non-existing nodes from ways
-        ways = [
-            [node for node in way if node in nodes]
-            for way in ways
-        ]
+        ways = [[node for node in way if node in nodes] for way in ways]
 
         # 2. discard (now) empty ways
         #    TODO: we now kicked out ways that go from inside
@@ -223,18 +220,12 @@ class PbfFileReader:
 
         # 3. lookup coordinates
         ways = [
-            [
-                (nodes[node][0], nodes[node][1])  # lon, lat
-                for node in way
-            ]
+            [(nodes[node][0], nodes[node][1]) for node in way]  # lon, lat
             for way in ways
         ]
 
         # 4. create geometries (if any ways)
-        ways = [
-            pygeos.linestrings(way)
-            for way in ways
-        ]
+        ways = [shapely.LineString(way) for way in ways]
 
         return ways
 
@@ -251,21 +242,20 @@ class PbfFileReader:
 
             parsed_data = workers.starmap(
                 PbfFileReader._parse_primitive_block,
-                zip(
-                    self._blocks,
-                    itertools.repeat(self._clip_polygon)
-                )
+                zip(self._blocks, itertools.repeat(self._clip_polygon)),
             )
 
             list_of_dicts_of_nodes, list_of_lists_of_ways = zip(*parsed_data)
             nodes = {
                 node_id: node_coords
-                for dict_of_nodes in list_of_dicts_of_nodes if dict_of_nodes
+                for dict_of_nodes in list_of_dicts_of_nodes
+                if dict_of_nodes
                 for node_id, node_coords in dict_of_nodes.items()
             }
             ways = [
                 way
-                for list_of_ways in list_of_lists_of_ways if list_of_ways
+                for list_of_ways in list_of_lists_of_ways
+                if list_of_ways
                 for way in list_of_ways
             ]
 
@@ -273,15 +263,15 @@ class PbfFileReader:
                 workers.starmap(
                     self._geometries_for_ways,
                     zip(
-                        numpy.array_split(ways, num_workers),
-                        itertools.repeat(nodes)
-                    )
+                        split_list(ways, num_workers),
+                        itertools.repeat(nodes),
+                    ),
                 ),
-                []
+                [],
             )
 
             self._street_network = geopandas.GeoDataFrame(
                 {"geometry": ways},
-                crs="EPSG:4326"
+                crs="EPSG:4326",
             )
             return self._street_network

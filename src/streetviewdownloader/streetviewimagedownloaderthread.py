@@ -17,13 +17,7 @@ class StreetViewImageDownloaderThread(BaseStreetViewDownloaderThread):
 
     SOURCE = StreetViewImageSource
 
-    def __init__(
-            self,
-            api_key,
-            url_signing_key,
-            input_queue,
-            image_directory
-    ):
+    def __init__(self, api_key, url_signing_key, input_queue, image_directory):
         """Initialise a StreetViewImageDownloaderThread."""
         super().__init__(api_key, url_signing_key)
         self.input_queue = input_queue
@@ -42,10 +36,7 @@ class StreetViewImageDownloaderThread(BaseStreetViewDownloaderThread):
     def _download_images(self, pano_id):
         """Download images from self.source (StreetViewImageSource)."""
         output_directory = os.path.join(
-            self.image_directory,
-            pano_id[0],
-            pano_id[0:2],
-            pano_id
+            self.image_directory, pano_id[0], pano_id[0:2], pano_id
         )
         if not os.path.exists(output_directory):
             os.makedirs(output_directory)
@@ -55,9 +46,8 @@ class StreetViewImageDownloaderThread(BaseStreetViewDownloaderThread):
                     filename = os.path.join(
                         output_directory,
                         "{pano_id:s}_{heading:03d}.jpg".format(
-                            pano_id=pano_id,
-                            heading=heading
-                        )
+                            pano_id=pano_id, heading=heading
+                        ),
                     )
                     with open(filename, "wb") as image_file:
                         image_file.write(image)

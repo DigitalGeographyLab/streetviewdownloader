@@ -4,6 +4,8 @@
 """Identify the smallest extract that covers the requested polygon."""
 
 
+import pandas
+
 from .geofabriksource import GeofabrikSource
 from .bbbikesource import BbbikeSource
 
@@ -28,7 +30,7 @@ class ExtractFinder:
         except AttributeError:
             metadata = self.SOURCES[0].metadata
             for source in self.SOURCES[1:]:
-                metadata = metadata.append(source.metadata)
+                metadata = pandas.concat([metadata, source.metadata])
 
             # sort by area (so smallest fitting is always first)
             metadata["area"] = metadata.area

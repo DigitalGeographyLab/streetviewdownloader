@@ -13,7 +13,9 @@ authors = [
 
 dependencies = [
     "ConfigArgParse",
+    "geopandas",
     "numpy",
+    "pandas",
     "pygeos",
     "pyproj",
     "pyrosm",

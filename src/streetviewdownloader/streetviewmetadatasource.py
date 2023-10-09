@@ -6,10 +6,7 @@
 
 import requests.exceptions
 
-from .basestreetviewsource import (
-    BaseStreetViewSource,
-    NoPanoramaFoundException
-)
+from .basestreetviewsource import BaseStreetViewSource, NoPanoramaFoundException
 
 
 class StreetViewMetadataSource(BaseStreetViewSource):
@@ -28,8 +25,7 @@ class StreetViewMetadataSource(BaseStreetViewSource):
 
         try:
             with self.session.get(
-                    url=self.BASE_URL,
-                    params={"location": location}
+                url=self.BASE_URL, params={"location": location}
             ) as response:
                 response.raise_for_status()
                 metadata = response.json()
