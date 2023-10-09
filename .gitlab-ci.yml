@@ -5,4 +5,4 @@ include:
 image: python:3.10
 
 variables:
-    PACKAGE_NAME: pbfclipper
+    PACKAGE_NAME: streetviewdownloader

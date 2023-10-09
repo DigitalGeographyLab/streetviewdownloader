@@ -16,11 +16,7 @@ from .streetviewmetadatadownloaderthread import StreetViewMetadataDownloaderThre
 class StreetViewMetadataDownloader:
     """Download metadata from the StreetView Static API."""
 
-    def __init__(
-            self,
-            api_key,
-            url_signing_key
-    ):
+    def __init__(self, api_key, url_signing_key):
         """
         Download metadata from the StreetView Static API.
 

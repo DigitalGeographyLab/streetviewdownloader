@@ -7,6 +7,7 @@ import os
 import os.path
 
 import geopandas
+import pandas
 
 from .streetnetworkpointgenerator import StreetNetworkPointGenerator
 from .streetviewimagedownloader import StreetViewImageDownloader
@@ -16,11 +17,7 @@ from .streetviewmetadatadownloader import StreetViewMetadataDownloader
 class StreetViewDownloader:
     """Download StreetView images and metadata."""
 
-    def __init__(
-            self,
-            api_key,
-            url_signing_key
-    ):
+    def __init__(self, api_key, url_signing_key):
         """
         Download StreetView images and metadata.
 
@@ -59,7 +56,9 @@ class StreetViewDownloader:
         """
         os.makedirs(output_directory, exist_ok=True)
 
-        points_on_street_network = StreetNetworkPointGenerator().points_on_street_network(extent)
+        points_on_street_network = (
+            StreetNetworkPointGenerator().points_on_street_network(extent)
+        )
 
         streetview_metadata = StreetViewMetadataDownloader(
             self.api_key, self.url_signing_key
@@ -72,13 +71,11 @@ class StreetViewDownloader:
         metadata_filename = os.path.join(output_directory, "metadata.gpkg")
         if os.path.exists(metadata_filename):
             existing_data = geopandas.read_file(metadata_filename)
-            streetview_metadata = existing_data.append(streetview_metadata)
+            streetview_metadata = pandas.concat(existing_data, streetview_metadata)
             streetview_metadata = streetview_metadata.drop_duplicates(["pano_id"])
-        streetview_metadata.to_file(
-            os.path.join(output_directory, "metadata.gpkg")
-        )
+        streetview_metadata.to_file(os.path.join(output_directory, "metadata.gpkg"))
 
         if not metadata_only:
-            StreetViewImageDownloader(
-                self.api_key, self.url_signing_key
-            ).download(streetview_metadata, output_directory)
+            StreetViewImageDownloader(self.api_key, self.url_signing_key).download(
+                streetview_metadata, output_directory
+            )

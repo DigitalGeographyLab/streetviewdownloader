@@ -18,7 +18,7 @@ class BasePbfSource:
         """Download (a possible cached copy of) metadata."""
         metadata_raw = tempfile.TemporaryFile(
             mode="w+",
-            suffix=os.path.splitext(self.METADATA_URL)[1]
+            suffix=os.path.splitext(self.METADATA_URL)[1],
         )
 
         with CachingRequestsSession() as session, session.get(

@@ -60,13 +60,19 @@ class StreetViewStaticApiAuth(requests.auth.AuthBase):
             hmac.new(
                 self._url_signing_key,
                 str.encode(path_url),
-                hashlib.sha1
+                hashlib.sha1,
             ).digest()
         ).decode()
 
-        request.url = urllib.parse.urlunparse((
-            url.scheme, url.netloc, url.path, url.params,
-            urllib.parse.urlencode(params, doseq=True), url.fragment
-        ))
+        request.url = urllib.parse.urlunparse(
+            (
+                url.scheme,
+                url.netloc,
+                url.path,
+                url.params,
+                urllib.parse.urlencode(params, doseq=True),
+                url.fragment,
+            )
+        )
 
         return request

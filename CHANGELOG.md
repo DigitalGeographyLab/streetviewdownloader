@@ -1,3 +1,7 @@
+- **0.2.5** (2023-10-09):
+    - support current versions of pandas, geopandas, numpy
+    - fix errors relating to deprecated features in those libraries
+
 - **0.2.4** (2023-04-24):
     - remove hard-coded `distance_between_points`  (issue #4)
     - prevent failing if not all headings exist for a panorama (issue #5)

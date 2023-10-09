@@ -23,15 +23,15 @@ class StreetViewImageSource(BaseStreetViewSource):
         for heading in range(0, 360, self.FIELD_OF_VIEW):
             try:
                 with self.session.get(
-                        url=self.BASE_URL,
-                        params={
-                            "pano": pano_id,
-                            "size": self.MAX_SIZE,
-                            "heading": heading,
-                            "fov": self.FIELD_OF_VIEW,
-                            "return_error_code": True,
-                            "source": "outdoor"
-                        }
+                    url=self.BASE_URL,
+                    params={
+                        "pano": pano_id,
+                        "size": self.MAX_SIZE,
+                        "heading": heading,
+                        "fov": self.FIELD_OF_VIEW,
+                        "return_error_code": True,
+                        "source": "outdoor",
+                    },
                 ) as response:
                     response.raise_for_status()
                     images[heading] = response.content

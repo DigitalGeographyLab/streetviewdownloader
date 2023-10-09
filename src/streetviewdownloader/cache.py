@@ -27,9 +27,9 @@ class Cache:
     hashing_algorithm = hashlib.blake2b
 
     def __init__(
-            self,
-            expire_after=datetime.timedelta(days=1),
-            clean_cache=True
+        self,
+        expire_after=datetime.timedelta(days=1),
+        clean_cache=True,
     ):
         """
         A simple, universal file-based cache.
@@ -50,10 +50,7 @@ class Cache:
     def write_to_cache(self, realm, content):
         """Write a downloaded file to a cache location."""
         cached_file_name = self._cached_file_name(realm)
-        os.makedirs(
-            os.path.dirname(cached_file_name),
-            exist_ok=True
-        )
+        os.makedirs(os.path.dirname(cached_file_name), exist_ok=True)
         with open(cached_file_name, "wb") as cache_file:
             cache_file.write(content)
 
@@ -83,13 +80,8 @@ class Cache:
 
     def _cached_file_name(self, realm):
         """Return the filename of a possible cache copy of url."""
-        digest = self.hashing_algorithm(
-            (realm).encode("UTF-8")
-        ).hexdigest()
-        cached_file_name = os.path.join(
-            self._cache_dir,
-            digest
-        )
+        digest = self.hashing_algorithm((realm).encode("UTF-8")).hexdigest()
+        cached_file_name = os.path.join(self._cache_dir, digest)
         return cached_file_name
 
     def _cache_age(self, cached_file_name):
@@ -99,11 +91,8 @@ class Cache:
         Raises NotInCache if cached file not found.
         """
         try:
-            cache_age = (
-                datetime.datetime.now()
-                - datetime.datetime.fromtimestamp(
-                    os.stat(cached_file_name).st_mtime
-                )
+            cache_age = datetime.datetime.now() - datetime.datetime.fromtimestamp(
+                os.stat(cached_file_name).st_mtime
             )
             return cache_age
         except FileNotFoundError as exception:

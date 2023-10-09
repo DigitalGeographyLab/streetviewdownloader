@@ -9,12 +9,12 @@ from .streetviewmetadatadownloader import StreetViewMetadataDownloader
 from .streetviewstaticapiauth import StreetViewStaticApiAuth
 
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 __all__ = [
     "StreetViewDownloader",
     "StreetNetworkPointGenerator",
     "StreetViewImageDownloader",
     "StreetViewMetadataDownloader",
-    "StreetViewStaticApiAuth"
+    "StreetViewStaticApiAuth",
 ]

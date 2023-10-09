@@ -1,3 +1,4 @@
+contextily
 ipycache
 ipykernel
 ipyleaflet
@@ -15,7 +16,9 @@ sphinxcontrib-qthelp
 sphinxcontrib-serializinghtml
 
 ConfigArgParse
+geopandas
 numpy
+pandas
 pygeos
 pyproj
 pyrosm

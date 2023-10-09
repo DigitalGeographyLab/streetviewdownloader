@@ -16,21 +16,18 @@ import datetime
 
 import requests
 
-from .cache import (
-    Cache,
-    NotInCache
-)
+from .cache import Cache, NotInCache
 
 
 class CachingRequestsSession(requests.Session):
     """Download a file, or serve a cached copy if there is."""
 
     def __init__(
-            self,
-            *args,
-            expire_after=datetime.timedelta(days=1),
-            clean_cache=True,
-            **kwargs
+        self,
+        *args,
+        expire_after=datetime.timedelta(days=1),
+        clean_cache=True,
+        **kwargs,
     ):
         """
         Download a file, or serve a cached copy if there is.

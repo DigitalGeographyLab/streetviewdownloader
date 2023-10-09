@@ -16,9 +16,9 @@ class StreetViewImageDownloader:
     """Download images from the StreetView Static API."""
 
     def __init__(
-            self,
-            api_key,
-            url_signing_key,
+        self,
+        api_key,
+        url_signing_key,
     ):
         """
         Initialise a StreetViewImageDownloader.

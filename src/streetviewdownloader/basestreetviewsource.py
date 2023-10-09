@@ -28,6 +28,4 @@ class BaseStreetViewSource:
             StreetView static API url signing key
         """
         self.session = requests.session()
-        self.session.auth = StreetViewStaticApiAuth(
-            api_key, url_signing_key
-        )
+        self.session.auth = StreetViewStaticApiAuth(api_key, url_signing_key)
