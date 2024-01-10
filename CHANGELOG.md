@@ -1,3 +1,6 @@
+- **0.2.6.dev0** (2024-01-10):
+    - migrate repository to DigitalGeographyLab’s GitHub
+
 - **0.2.5** (2023-10-09):
     - support current versions of pandas, geopandas, numpy
     - fix errors relating to deprecated features in those libraries
