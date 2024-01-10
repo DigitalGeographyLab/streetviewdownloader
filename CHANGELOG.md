@@ -1,4 +1,4 @@
-- **0.2.6.dev0** (2024-01-10):
+- **0.2.6** (2024-01-10):
     - migrate repository to DigitalGeographyLab’s GitHub
 
 - **0.2.5** (2023-10-09):
