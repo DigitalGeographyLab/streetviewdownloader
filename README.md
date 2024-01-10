@@ -13,7 +13,7 @@ pip install streetviewdownloader
 Alternatively, it can be built from source:
 
 ```
-git clone https://gitlab.com/christoph.fink/streetviewdownloader
+git clone https://github.com/DigitalGeographyLab/streetviewdownloader
 cd streetviewdownloader
 pip install .
 ```

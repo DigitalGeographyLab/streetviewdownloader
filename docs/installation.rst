@@ -9,6 +9,6 @@ Streetviewdownloader is available from PyPi, and can be installed using ``pip``:
 
 Alternatively, it can be installed from source by cloning this repository and running pip in the checked-out directory::
 
-    git clone https://gitlab.com/christoph.fink/streetviewdownloader/
+    git clone https://github.com/DigitalGeographyLab/streetviewdownloader/
     cd streetviewdownloader
     pip install .
