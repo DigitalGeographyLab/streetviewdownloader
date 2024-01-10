@@ -1,8 +1,0 @@
-include:
-    - remote: 'https://gitlab.com/christophfink/ci-cd-toolbox/raw/master/python/gitlab-ci-pyproject.yaml?ref=master&private_token=$CI_JOB_TOKEN&.yaml'
-
-# override image, since pyrosm currently does not compile on 3.11
-image: python:3.10
-
-variables:
-    PACKAGE_NAME: streetviewdownloader

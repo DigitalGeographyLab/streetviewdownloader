@@ -1,0 +1,19 @@
+# vim: set tabstop=2 softtabstop=2 shiftwidth=2 expandtab:
+
+name: Lint code of pull requests
+on:
+  pull_request:
+
+jobs:
+  lint:
+    name: Linting code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install black flake8
+      - run: python -m black --check .
+      - run: python -m flake8 .
