@@ -12,13 +12,13 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. 
+1.
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
 **Environment:**
- - OS: 
+ - OS:
  - Python package source (PyPi, conda, ...)
  - Versions of Python, Java Development Kit, Python modules
 
