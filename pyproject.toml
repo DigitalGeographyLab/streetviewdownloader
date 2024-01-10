@@ -35,11 +35,20 @@ license = {text = "GPL-3.0-or-later"}
 
 dynamic = ["version"]
 
+[project.optional-dependencies]
+docs = [
+    "contextily", "ipycache", "ipykernel", "ipyleaflet", "ipython",
+    "ipython-genutils", "ipywidgets", "nbsphinx", "Sphinx", "sphinx-rtd-theme",
+    "sphinxcontrib-applehelp", "sphinxcontrib-devhelp",
+    "sphinxcontrib-htmlhelp", "sphinxcontrib-jsmath", "sphinxcontrib-qthelp",
+    "sphinxcontrib-serializinghtml"
+]
+
 [project.urls]
 Documentation = "https://streetviewdownloader.readthedocs.io/"
-Repository = "https://gitlab.com/christophfink/streetviewdownloader/"
-"Change log" = "https://gitlab.com/christophfink/streetviewdownloader/-/blob/main/CHANGELOG.md"
-"Bug tracker" = "https://gitlab.com/christophfink/streetviewdownloader/-/issues"
+Repository = "https://github.com/DigitalGeographyLab/streetviewdownloader/"
+"Change log" = "https://github.com/DigitalGeographyLab/streetviewdownloader/blob/main/CHANGELOG.md"
+"Bug tracker" = "https://github.com/DigitalGeographyLab/streetviewdownloader/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "streetviewdownloader.__version__"}
